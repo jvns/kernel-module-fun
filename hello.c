@@ -1,39 +1,21 @@
-/* hello.c
- *
- * "Hello, world" - the loadable kernel module version.
- *
- * Compile this with
- *
- *          gcc -c hello.c -Wall
- */
+#include <linux/module.h>    // included for all kernel modules
+#include <linux/kernel.h>    // included for KERN_INFO
+#include <linux/init.h>      // included for __init and __exit macros
 
-/* Declare what kind of code we want from the header files */
-#define __KERNEL__         /* We're part of the kernel */
-#define MODULE             /* Not a permanent part, though. */
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Lakshmanan");
+MODULE_DESCRIPTION("A Simple Hello World module");
 
-/* Standard headers for LKMs */
-//#include <linux/modversions.h>
-#include <linux/module.h>
-
-#include <linux/tty.h>      /* console_print() interface */
-
-/* Initialize the LKM */
-int init_module()
+static int __init hello_init(void)
 {
-  console_print("Hello, world - this is the kernel speaking\n");
-  /* More normal is printk(), but there's less that can go wrong with
-     console_print(), so let's start simple.
-  */
-
-  /* If we return a non zero value, it means that
-   * init_module failed and the LKM can't be loaded
-   */
-  return 0;
+    printk(KERN_INFO "Hello world!\n");
+    return 0;    // Non-zero return means that the module couldn't be loaded.
 }
 
-
-/* Cleanup - undo whatever init_module did */
-void cleanup_module()
+static void __exit hello_cleanup(void)
 {
-  console_print("Short is the life of an LKM\n");
+    printk(KERN_INFO "Cleaning up module.\n");
 }
+
+module_init(hello_init);
+module_exit(hello_cleanup);
