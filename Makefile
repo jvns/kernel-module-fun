@@ -1,4 +1,4 @@
-obj-m += hello.o
+obj-m += hello-packet.o
 obj-m += rootkit.o
 
 all:
