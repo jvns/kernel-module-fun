@@ -3,7 +3,7 @@ Kernel module fun
 
 ## Motivation
 
-I didn't know at all how kernel modules worked. This is me learning how. This is all tested using the 
+I didn't know at all how kernel modules worked. This is me learning how. This is all tested using the `3.5.0-18` kernel.
 
 ## Contents
 
@@ -24,3 +24,18 @@ sudo apt-get install linux-headers-3.5.0-18-generic
 ```
 
 but I don't remember for sure. If you try this out, I'd love to hear.
+
+To compile them, just run
+
+```
+make
+```
+
+## Inserting into your kernel (at your own risk!)
+
+```
+sudo insmod hello.ko
+dmesg | tail
+```
+
+should display the "hello world" message
