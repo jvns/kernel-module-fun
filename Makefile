@@ -1,6 +1,7 @@
 obj-m += hello.o
 obj-m += hello-packet.o
 obj-m += rootkit.o
+obj-m += rickroll.o
 obj-m += excited_virus.o
 
 all:
