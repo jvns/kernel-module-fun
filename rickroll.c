@@ -13,7 +13,7 @@ static char *rickroll_filename = "/home/bork/media/music/Rick Astley - Never Gon
 
 /*
  * Set up a module parameter for the filename. The arguments are variable name,
- * type, and permissions The thid argument is the permissions for the parameter
+ * type, and permissions The third argument is the permissions for the parameter
  * file in sysfs, something like
  *
  * /sys/module/<module_name>/parameters/<parameter_name>
