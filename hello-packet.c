@@ -24,9 +24,17 @@ unsigned int my_hook(unsigned int hooknum,
     return NF_ACCEPT;
 }
 
+unsigned int my_hook_kernel_v4(void *priv,
+             struct sk_buff *skb,
+             const struct nf_hook_state *state) {
+    struct sock *sk = skb->sk;
+    printk("Hello packet!");
+    return NF_ACCEPT;
+}
+
 static int init_filter_if(void)
 {
-  nfho.hook = my_hook;
+  nfho.hook = my_hook_kernel_v4;
   nfho.hooknum = 0 ; //NF_IP_PRE_ROUTING;
   nfho.pf = PF_INET;
   nfho.priority = NF_IP_PRI_FIRST;
