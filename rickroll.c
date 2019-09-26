@@ -3,6 +3,7 @@
 #include <linux/init.h>
 #include <linux/syscalls.h>
 #include <linux/string.h>
+#include <linux/slab.h>
 
 
 MODULE_LICENSE("GPL");
@@ -36,9 +37,9 @@ MODULE_PARM_DESC(rickroll_filename, "The location of the rick roll file");
 
 
 static unsigned long **find_sys_call_table(void);
-asmlinkage long rickroll_open(const char __user *filename, int flags, umode_t mode);
+asmlinkage long rickroll_openat(int dirfd, const char __user *filename, int flags, umode_t mode);
 
-asmlinkage long (*original_sys_open)(const char __user *, int, umode_t);
+asmlinkage long (*original_sys_openat)(int, const char __user *, int, umode_t);
 asmlinkage unsigned long **sys_call_table;
 
 
@@ -61,8 +62,8 @@ static int __init rickroll_init(void)
      * of the real sys_open so we can put it back when we're unloaded.
      */
     DISABLE_WRITE_PROTECTION;
-    original_sys_open = (void *) sys_call_table[__NR_open];
-    sys_call_table[__NR_open] = (unsigned long *) rickroll_open;
+    original_sys_openat = (void *) sys_call_table[__NR_openat];
+    sys_call_table[__NR_openat] = (unsigned long *) rickroll_openat;
     ENABLE_WRITE_PROTECTION;
 
     printk(KERN_INFO "Never gonna give you up!\n");
@@ -74,16 +75,21 @@ static int __init rickroll_init(void)
  * Our replacement for sys_open, which forwards to the real sys_open unless the
  * file name ends with .mp3, in which case it opens the rick roll file instead.
  */
-asmlinkage long rickroll_open(const char __user *filename, int flags, umode_t mode)
+asmlinkage long rickroll_openat(int dirfd, const char __user *filename, int flags, umode_t mode)
 {
+    printk(KERN_INFO "opening ze file\n");
     int len = strlen(filename);
 
-    /* See if we should hijack the open */
-    if(strcmp(filename + len - 4, ".mp3")) {
+    char* kbuf=(char*)kmalloc(256,GFP_KERNEL);
+    len = strncpy_from_user(kbuf, filename, 255);
+    if(strcmp(kbuf + len - 4, ".mp3")) {
 	/* Just pass through to the real sys_open if the extension isn't .mp3 */
-	return (*original_sys_open)(filename, flags, mode);
+        kfree(kbuf);
+        return (*original_sys_openat)(dirfd, filename, flags, mode);
     } else {
-	/* Otherwise we're going to hijack the open */
+
+        /* Otherwise we're going to hijack the open */
+    kfree(kbuf);
 	mm_segment_t old_fs;
 	long fd;
 
@@ -102,7 +108,7 @@ asmlinkage long rickroll_open(const char __user *filename, int flags, umode_t mo
 	set_fs(KERNEL_DS);
 
 	/* Open the rickroll file instead */
-	fd = (*original_sys_open)(rickroll_filename, flags, mode);
+	fd = (*original_sys_openat)(dirfd, rickroll_filename, flags, mode);
 
 	/* Restore fs to its original value */
 	set_fs(old_fs);
@@ -118,7 +124,7 @@ static void __exit rickroll_cleanup(void)
 
     /* Restore the original sys_open in the table */
     DISABLE_WRITE_PROTECTION;
-    sys_call_table[__NR_open] = (unsigned long *) original_sys_open;
+    sys_call_table[__NR_openat] = (unsigned long *) original_sys_openat;
     ENABLE_WRITE_PROTECTION;
 }
 
@@ -133,7 +139,7 @@ static void __exit rickroll_cleanup(void)
  * (__NR_close), we can get the table's base address.
  */
 static unsigned long **find_sys_call_table() {
-    unsigned long offset = 0xffffffffaf4001a0;
+    unsigned long offset = 0xffffffffa9c001a0;
     unsigned long **sct = (unsigned long **) offset;
     if(sct[__NR_close] == (unsigned long *) sys_close) {
         return sct;
