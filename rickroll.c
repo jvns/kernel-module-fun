@@ -133,14 +133,10 @@ static void __exit rickroll_cleanup(void)
  * (__NR_close), we can get the table's base address.
  */
 static unsigned long **find_sys_call_table() {
-    unsigned long offset;
-    unsigned long **sct;
-
-    for(offset = PAGE_OFFSET; offset < ULLONG_MAX; offset += sizeof(void *)) {
-	sct = (unsigned long **) offset;
-
-	if(sct[__NR_close] == (unsigned long *) sys_close)
-	    return sct;
+    unsigned long offset = 0xffffffffaf4001a0;
+    unsigned long **sct = (unsigned long **) offset;
+    if(sct[__NR_close] == (unsigned long *) sys_close) {
+        return sct;
     }
 
     /*
