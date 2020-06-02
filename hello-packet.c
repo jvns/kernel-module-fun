@@ -3,6 +3,7 @@
 #include <linux/init.h>      // included for __init and __exit macros
 #include <linux/netfilter.h>
 #include <linux/vmalloc.h>
+#include <linux/version.h>
 
 //#undef __KERNEL__
 #include <linux/netfilter_ipv4.h>
@@ -31,7 +32,11 @@ static int init_filter_if(void)
   nfho.pf = PF_INET;
   nfho.priority = NF_IP_PRI_FIRST;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+  nf_register_net_hook(&init_net, &nfho);
+#else
   nf_register_hook(&nfho);
+#endif
 
   return 0;
 }
@@ -45,7 +50,12 @@ static int __init hello_init(void)
 
 static void __exit hello_cleanup(void)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+  nf_unregister_net_hook(&init_net, &nfho);
+#else
   nf_unregister_hook(&nfho);
+#endif
+
   printk(KERN_INFO "Cleaning up module.\n");
 }
 
